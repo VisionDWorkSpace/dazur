@@ -1,68 +1,59 @@
-"use client"
-
-import { GrainOverlay } from "@/components/grain-overlay"
-import { SharedHeader } from "@/components/shared-header"
-import { HeroSection } from "@/components/sections/hero-section"
-import { OpportunitySection } from "@/components/sections/opportunity-section"
-import { FooterSection } from "@/components/sections/footer-section"
-import { WhatWeDoSection } from "@/components/sections/what-we-do-section"
-import { AnalysisSection } from "@/components/sections/analysis-section"
-import { IndustriesSection } from "@/components/sections/industries-section"
-import { InvestorSection } from "@/components/sections/investor-section"
+import { MasterForm } from "@/components/form/master-form"
+import { Navbar } from "@/components/navigation/navbar"
 
 export default function Home() {
-  const scrollToSection = (href: string) => {
-    if (href === "#hero-section") {
-      window.scrollTo({ top: 0, behavior: "smooth" })
-      return
-    }
-
-    const element = document.querySelector(href)
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }
-
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ProfessionalService",
-            name: "Dazur Capital",
-            description: "Market Value Optimization & Capital Advisory",
-            url: "https://dazur.capital",
-            logo: "https://dazur.capital/favicon.png",
-            image: "https://dazur.capital/og-image.png",
-            telephone: "+351910800680",
-            priceRange: "$$$$",
-            areaServed: "Global",
-            serviceType: ["Capital Advisory", "Market Value Optimization", "Business Valuation", "M&A Advisory"],
-            address: {
-              "@type": "PostalAddress",
-              addressCountry: "PT",
-            },
-          }),
-        }}
-      />
+    <main className="min-h-screen bg-background">
+      {/* Header */}
+      <Navbar />
 
-      <main className="relative min-h-screen w-full bg-background">
-        <GrainOverlay />
-
-        <SharedHeader currentPage="home" />
-
-        <div className="relative">
-          <HeroSection scrollToSection={scrollToSection} />
-          <WhatWeDoSection />
-          <AnalysisSection />
-          <InvestorSection scrollToSection={scrollToSection} />
-          <IndustriesSection />
-          <OpportunitySection />
-          <FooterSection />
+      {/* Hero */}
+      <section className="py-12 md:py-16 lg:py-20 border-b bg-gradient-to-b from-secondary/30 to-background">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-xs font-medium text-primary uppercase tracking-widest mb-3 md:mb-4">
+            Submissão de Oportunidades
+          </p>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-semibold text-foreground mb-4 md:mb-5 text-balance leading-tight">
+            Venda os Seus Ativos com Confiança
+          </h2>
+          <p className="text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto text-pretty leading-relaxed">
+            Submeta oportunidades de negócios, imóveis, equipamentos ou propriedade intelectual com valor igual ou
+            superior a 1.000.000 €. A nossa rede de investidores qualificados está pronta para analisar a sua proposta.
+          </p>
         </div>
-      </main>
-    </>
+      </section>
+
+      {/* Form */}
+      <section className="py-8 md:py-12 lg:py-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <MasterForm />
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t py-8 md:py-10 bg-secondary/20">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-serif font-bold text-sm">IB</span>
+              </div>
+              <span className="text-xs md:text-sm text-muted-foreground">© 2025 Private Investment Banking</span>
+            </div>
+            <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-muted-foreground">
+              <a href="#" className="hover:text-foreground transition-colors">
+                Privacidade
+              </a>
+              <a href="#" className="hover:text-foreground transition-colors">
+                Termos
+              </a>
+              <a href="#" className="hover:text-foreground transition-colors">
+                Compliance
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
   )
 }
