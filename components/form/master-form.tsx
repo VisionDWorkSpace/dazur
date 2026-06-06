@@ -165,9 +165,6 @@ function FormContent() {
     }
   }
 
-  const portfolioItems = formData.portfolioItems || []
-  const validItems = portfolioItems.filter((item) => (item?.estimatedValue || 0) >= MIN_VALUE)
-
   return (
     <div className="space-y-4 md:space-y-6">
       <ProgressIndicator />
@@ -189,7 +186,7 @@ function FormContent() {
         </Button>
 
         {currentStep < 2 ? (
-          <Button onClick={handleNext} className="gap-2" disabled={validItems.length === 0} size="lg">
+          <Button onClick={handleNext} className="gap-2" size="lg">
             <span className="hidden sm:inline">Seguinte</span>
             <span className="sm:hidden">Continuar</span>
             <ArrowRight className="w-4 h-4" />

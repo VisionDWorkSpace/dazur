@@ -33,6 +33,8 @@ import {
   Plus,
   Loader2,
   TrendingUp,
+  ArrowRight,
+  AlertCircle,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
@@ -832,8 +834,79 @@ function getTabCompletion(item: PortfolioItem): { info: boolean; docs: boolean; 
   }
 }
 
+type MissingField = { label: string; tab: "info" | "docs" | "photos" }
+
+function getMissingFields(item: PortfolioItem): MissingField[] {
+  const missing: MissingField[] = []
+  const add = (value: string | number | undefined, label: string) => {
+    if (!validateRequired(value)) missing.push({ label, tab: "info" })
+  }
+
+  if (item.itemType === "business") {
+    const b = item as BusinessItem
+    add(b.name, "Nome da empresa")
+    add(b.industry, "Indústria")
+    add(b.address, "Morada")
+    add(b.employees, "Colaboradores")
+    add(b.annualRevenue, "Faturação anual")
+    add(b.ebitda, "EBITDA")
+    add(b.valueJustification, "Justificação do valor")
+  } else if (item.itemType === "real-estate") {
+    const r = item as RealEstateItem
+    add(r.propertyType, "Tipo de imóvel")
+    add(r.address, "Morada")
+    add(r.totalArea, "Área total")
+    add(r.usableArea, "Área útil")
+    add(r.yearBuilt, "Ano de construção")
+    add(r.valueJustification, "Justificação do valor")
+  } else if (item.itemType === "movable-asset") {
+    const m = item as MovableAssetItem
+    add(m.assetType, "Categoria")
+    add(m.brand, "Marca")
+    add(m.model, "Modelo")
+    add(m.serialNumber, "Nº de série")
+    add(m.year, "Ano")
+    add(m.condition, "Condição")
+    add(m.address, "Localização")
+    add(m.valueJustification, "Justificação do valor")
+  } else if (item.itemType === "intangible-asset") {
+    const i = item as IntangibleAssetItem
+    add(i.intangibleType, "Tipo")
+    add(i.name, "Nome")
+    add(i.registrationNumber, "Nº de registo")
+    add(i.registrationEntity, "Entidade de registo")
+    add(i.validUntil, "Válido até")
+    add(i.valueJustification, "Justificação do valor")
+  }
+
+  // Valor pretendido (mínimo)
+  if (!validateRequired(item.estimatedValue)) {
+    missing.push({ label: "Valor pretendido", tab: "info" })
+  } else if ((item.estimatedValue || 0) < MIN_VALUE) {
+    missing.push({ label: `Valor mínimo de ${formatCurrency(MIN_VALUE)} €`, tab: "info" })
+  }
+
+  // Documentos obrigatórios em falta
+  const reqs = getDocumentRequirements(item.itemType)
+  const validDocs = item.documents?.filter((d) => d.validationStatus === "valid") || []
+  reqs
+    .filter((r) => r.required)
+    .forEach((req) => {
+      if (!validDocs.some((d) => d.requirementId === req.id)) {
+        missing.push({ label: req.name, tab: "docs" })
+      }
+    })
+
+  // Fotografias (exceto intangíveis)
+  if (item.itemType !== "intangible-asset" && (item.photos?.length || 0) === 0) {
+    missing.push({ label: "Pelo menos uma fotografia", tab: "photos" })
+  }
+
+  return missing
+}
+
 export function Step1Portfolio() {
-  const { formData, updateFormData, validationErrors } = useFormContext()
+  const { formData, updateFormData, validationErrors, setCurrentStep } = useFormContext()
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
   const [showingAssetTypeSelection, setShowingAssetTypeSelection] = useState(false)
 
@@ -1009,10 +1082,6 @@ export function Step1Portfolio() {
     return option?.icon || Building2
   }
 
-  // Permitir sempre adicionar mais ativos, mesmo que os anteriores estejam incompletos.
-  // O utilizador pode passar à frente e completar as informações/documentos mais tarde.
-  const canAddMore = true
-
   const totalValue = items.reduce((sum, item) => sum + (item?.estimatedValue || 0), 0)
 
   return (
@@ -1079,6 +1148,7 @@ export function Step1Portfolio() {
             const isValid = (item?.estimatedValue || 0) >= MIN_VALUE
             const completion = getTabCompletion(item)
             const isComplete = completion.info && completion.docs && completion.photos
+            const missingFields = getMissingFields(item)
 
             return (
               <Card key={item.id} className={isComplete ? "border-[oklch(0.45_0.12_160)]/30" : ""}>
@@ -1184,6 +1254,66 @@ export function Step1Portfolio() {
                         onPhotoRemove={(photoId) => handlePhotoRemove(item.id, photoId)}
                       />
                     )}
+
+                    <div className="mt-6 pt-5 border-t border-border space-y-4">
+                      {missingFields.length > 0 ? (
+                        <div className="bg-amber-500/5 border border-amber-500/30 p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertCircle className="w-4 h-4 text-amber-600" />
+                            <p className="text-sm font-medium text-amber-700">
+                              Em falta neste ativo ({missingFields.length})
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {missingFields.map((field, idx) => (
+                              <span
+                                key={`${item.id}-missing-${idx}`}
+                                className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-background border border-amber-500/40 text-muted-foreground"
+                              >
+                                <span className="w-1.5 h-1.5 bg-amber-500" />
+                                {field.label}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-3">
+                            Pode passar à frente e completar estas informações mais tarde.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-[oklch(0.45_0.12_160)]/5 border border-[oklch(0.45_0.12_160)]/30 p-4 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-[oklch(0.45_0.12_160)]" />
+                          <p className="text-sm font-medium text-[oklch(0.45_0.12_160)]">
+                            Ativo completo e pronto para análise.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setExpandedItemId(null)
+                            setShowingAssetTypeSelection(true)
+                          }}
+                          className="gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Adicionar outro ativo
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(2)
+                            window.scrollTo({ top: 0, behavior: "smooth" })
+                          }}
+                          className="gap-2"
+                        >
+                          Seguinte
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 )}
               </Card>
@@ -1191,18 +1321,12 @@ export function Step1Portfolio() {
           })}
 
           <Card
-            className={`border-2 border-dashed transition-all ${
-              canAddMore
-                ? "border-border hover:border-primary hover:bg-primary/5 cursor-pointer"
-                : "border-muted-foreground/20 opacity-50 cursor-not-allowed"
-            }`}
-            onClick={() => canAddMore && setShowingAssetTypeSelection(true)}
+            className="border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 cursor-pointer transition-all"
+            onClick={() => setShowingAssetTypeSelection(true)}
           >
             <CardContent className="p-4 flex items-center justify-center gap-3 text-muted-foreground">
-              <Plus className={`w-4 h-4 ${canAddMore ? "group-hover:text-primary" : ""}`} />
-              <span className={`font-medium text-sm ${canAddMore ? "hover:text-primary" : ""}`}>
-                {canAddMore ? "Adicionar outro ativo" : "Complete o ativo atual para adicionar mais"}
-              </span>
+              <Plus className="w-4 h-4" />
+              <span className="font-medium text-sm">Adicionar outro ativo</span>
             </CardContent>
           </Card>
         </div>
