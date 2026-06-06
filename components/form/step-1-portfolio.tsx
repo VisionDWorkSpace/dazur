@@ -1009,10 +1009,9 @@ export function Step1Portfolio() {
     return option?.icon || Building2
   }
 
-  const canAddMore = items.every((item) => {
-    const completion = getTabCompletion(item)
-    return completion.info && completion.docs && completion.photos
-  })
+  // Permitir sempre adicionar mais ativos, mesmo que os anteriores estejam incompletos.
+  // O utilizador pode passar à frente e completar as informações/documentos mais tarde.
+  const canAddMore = true
 
   const totalValue = items.reduce((sum, item) => sum + (item?.estimatedValue || 0), 0)
 
